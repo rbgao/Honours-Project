@@ -37,14 +37,14 @@ class MySpider(CrawlSpider):
             sectiontext = h2.xpath('following-sibling::p[count(preceding-sibling::h2)=$cnt]', cnt=cnt).getall()
             sectiontext_cleaned = []
             for paragraph in sectiontext:
-                sectiontext_cleaned.append(paragraph.replace('\r',' ').replace('\n','').replace('\t','').replace('\xa0',' ').replace('<p>','').replace('</p>',''))
+                sectiontext_cleaned.append(paragraph.replace('\r','').replace('\n',' ').replace('\t','').replace('\xa0',' ').replace('<p>','').replace('</p>',''))
             item[sectiontitles] = sectiontext_cleaned
         for cnt_1, h2_1 in enumerate(response.css('div#content.column-content.content-style > h2'), start = 1):
             sectiontitles = h2_1.xpath('normalize-space()').get()
             sectiontext = h2_1.xpath('following-sibling::p[count(preceding-sibling::h2)=$cnt]', cnt=cnt_1).getall()
             sectiontext_cleaned = []
             for paragraph in sectiontext:
-                sectiontext_cleaned.append(paragraph.replace('\r',' ').replace('\n','').replace('\t','').replace('\xa0',' ').replace('<p>','').replace('</p>',''))
+                sectiontext_cleaned.append(paragraph.replace('\r','').replace('\n',' ').replace('\t','').replace('\xa0',' ').replace('<p>','').replace('</p>',''))
             item[sectiontitles] = sectiontext_cleaned
         yield { 'Date': response.css('strong::text').extract(), 
                  'Text' : item,
