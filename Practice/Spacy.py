@@ -1,8 +1,17 @@
 import json
+from json_flatten import flatten
 with open('test_data.json') as json_file:
  data = json.load(json_file)
 
-print(data[0]['International economic developments'])
+for p in data:
+    del data[0]['Text']['Members present']
+    del data[0]['Text']['Others participating']
+    del data[0]['Text']['The decision']
+    data_flattened=flatten(data)
+    list = []
+    for keys in data_flattened:
+        list.append[keys]
+print(list)
 
 
 
@@ -28,19 +37,19 @@ print(data[0]['International economic developments'])
 # # Adds custom stopwords into spaCy default stopword list
 # nlp.Defaults.stop_words |= {"my_stopword_1", "my_stopword_2"}
 # # Prints spaCy default stopwords
-def remove_punctuation_special_chars(sentence):
- sentence = nlp(sentence)
- processed_sentence = ' '.join([token.text for token in sentence 
- if token.is_punct != True and 
-     token.is_quote != True and 
-     token.is_bracket != True and 
-     token.is_currency != True and 
-     token.is_digit != True])
- return processed_sentence
-
-def lemmatize_text(sentence):
-    sentence = nlp(sentence)
-    processed_sentence = ' '.join([word.lemma_ for word in 
-    sentence])
-    
-    return processed_sentence
+# def remove_punctuation_special_chars(sentence):
+#  sentence = nlp(sentence)
+#  processed_sentence = ' '.join([token.text for token in sentence 
+#  if token.is_punct != True and 
+#      token.is_quote != True and 
+#      token.is_bracket != True and 
+#      token.is_currency != True and 
+#      token.is_digit != True])
+#  return processed_sentence
+# 
+# def lemmatize_text(sentence):
+#     sentence = nlp(sentence)
+#     processed_sentence = ' '.join([word.lemma_ for word in 
+#     sentence])
+#     
+#     return processed_sentence
