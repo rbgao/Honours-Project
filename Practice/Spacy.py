@@ -1,4 +1,6 @@
 import json
+import spacy
+nlp = spacy.load('en_core_web_sm')
 from json_flatten import flatten
 with open('test_data.json') as json_file:
  data = json.load(json_file)
@@ -8,10 +10,13 @@ for p in data:
     del data[0]['Text']['Others participating']
     del data[0]['Text']['The decision']
     data_flattened=flatten(data)
-    list = []
-    for keys in data_flattened:
-        list.append[keys]
-print(list)
+
+data_list = data_flattened.values()
+string = ""
+for paragraph in data_list:
+    string = string +" " + paragraph
+
+bag = nlp(string)
 
 
 
