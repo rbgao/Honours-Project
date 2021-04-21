@@ -18,6 +18,7 @@ for paragraph in data_list:
 
 bag = nlp(string)
 
+filtered_tokens = [token for token in  if not token.is_stop]
 
 
 # print(data)
