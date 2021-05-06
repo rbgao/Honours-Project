@@ -7,23 +7,24 @@ from scrapy.selector import Selector
 
 class MySpider(CrawlSpider):
     name = "helpME"
-    start_urls = [  "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2006/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2007/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2008/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2009/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2010/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2011/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2012/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2013/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2014/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2015/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2016/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2017/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2018/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2019/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2020/",
-                    "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2021/",
-                   ]
+    start_urls = ["https://www.rba.gov.au/monetary-policy/rba-board-minutes/2020/2020-03-03.html"] 
+                 #[  "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2006/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2007/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2008/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2009/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2010/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2011/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2012/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2013/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2014/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2015/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2016/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2017/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2018/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2019/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2020/",
+                 #   "https://www.rba.gov.au/monetary-policy/rba-board-minutes/2021/",
+                 #  ]
 
     rules = (
             Rule(LinkExtractor(allow=(r'\/rba-board-minutes\/\d+\/\d\d\d\d-\d\d-\d\d.html',)), callback = 'parse', follow= True),
