@@ -6,29 +6,31 @@ from json_flatten import flatten
 from spacy.matcher import PhraseMatcher
 
 nlp = spacy.load('en_core_web_sm')
-text = "Highly"
-# matcher_negative = PhraseMatcher(nlp.vocab)
-# matcher_positive = PhraseMatcher(nlp.vocab)
-# xlsx = pd.ExcelFile('LoughranMcDonald_SentimentWordLists_2018.xlsx')
-# 
-# negative = pd.read_excel(xlsx, 'Negative')
-# positive = pd.read_excel(xlsx, 'Positive')
-# 
-# positivelist=positive.values.tolist()
-# positivelist.append('Able')
-# negativelist = negative.values.tolist()
-# negativelist.append('Abandon')
-# 
-# positive_list = []
-# for sublist in positivelist:
-#     for item in sublist:
-#         positive_list.append(item.lower())
-# 
-# negative_list = []
-# for sublist in negativelist:
-#     for item in sublist:
-#         negative_list.append(item.lower())
-# 
+text = ""
+matcher_negative = PhraseMatcher(nlp.vocab)
+matcher_positive = PhraseMatcher(nlp.vocab)
+xlsx = pd.ExcelFile('LoughranMcDonald_SentimentWordLists_2018.xlsx')
+
+negative = pd.read_excel(xlsx, 'Negative')
+positive = pd.read_excel(xlsx, 'Positive')
+
+positivelist=positive.values.tolist()
+positivelist += [["Able"]]
+negativelist = negative.values.tolist()
+negativelist += [["Abandon"]]
+positive_list = []
+for sublist in positivelist:
+    for item in sublist:
+        positive_list.append(item.lower())
+
+negative_list = []
+for sublist in negativelist:
+    for item in sublist:
+        negative_list.append(item.lower())
+negative_list.remove('unemployed')
+negative_list.remove('unemployment')
+# This is optional
+
 # # nlp = English()
 # nlp.add_pipe('sentencizer')
 # with open('test_data.json') as json_file:
@@ -57,19 +59,19 @@ text = "Highly"
 #      token.is_digit != True])
 #  return processed_minutes
 # 
-def lowercase(minutes):
-    bag = nlp(minutes)
-    processed_minutes = ' '.join([token.text.lower() for token in bag])
-    return processed_minutes
-
-def lemmatize_text(minutes):
-    bag = nlp(minutes)
-    processed_minutes = ' '.join([word.lemma_ for word in bag])
-    return processed_minutes
-
-text = lowercase(text)
-text = lemmatize_text(text)
-print(text)
+# def lowercase(minutes):
+#     bag = nlp(minutes)
+#     processed_minutes = ' '.join([token.text.lower() for token in bag])
+#     return processed_minutes
+# 
+# def lemmatize_text(minutes):
+#     bag = nlp(minutes)
+#     processed_minutes = ' '.join([word.lemma_ for word in bag])
+#     return processed_minutes
+# 
+# text = lowercase(text)
+# text = lemmatize_text(text)
+# print(text)
 # 
 # string = ""
 # for paragraph in data_list:
@@ -140,3 +142,4 @@ print(text)
 #     minutes])
 #     
 #     return processed_minutes
+# 

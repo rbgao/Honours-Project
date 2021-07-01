@@ -4,12 +4,15 @@ negative = pd.read_excel(xlsx, 'Negative')
 positive = pd.read_excel(xlsx, 'Positive')
 
 positivelist=positive.values.tolist()
-positivelist.append('Able')
+positivelist += [["Able"]]
 negativelist = negative.values.tolist()
-negativelist.append('Abandon')
+negativelist += [["Abandon"]]
 
 negative_list = []
 for sublist in negativelist:
     for item in sublist:
         negative_list.append(item.lower())
-print(negative_list)
+
+negative_list.remove('unemployed')
+negative_list.remove('unemployment')
+print(positive_list)
