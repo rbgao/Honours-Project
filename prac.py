@@ -1,3 +1,9 @@
-print("Hello World")
+import spacy
+nlp = spacy.load('en_core_web_sm')
 
-asd
+text = "SHARPLY"
+
+doc = nlp(text)
+
+for token in doc:
+    print(token.pos_)
