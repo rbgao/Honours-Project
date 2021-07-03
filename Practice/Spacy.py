@@ -1,32 +1,50 @@
-### Packages ###
+#-------------------------------------Packages--------------------------------------------------#
 
 import json
 import spacy
 import pandas as pd
 from json_flatten import flatten
-# from spacy.lang.en import English
 from spacy.matcher import PhraseMatcher
 
-#+# Packages #+#
+#-------------------------------------Setup--------------------------------------------------#
+
+## Load in NLP
 
 nlp = spacy.load('en_core_web_sm')
-text = "Members noted that the rebound in the demand for goods globally and the upturn in industrial production, particularly in China and elsewhere in east Asia, had continued to support commodity prices. Iron ore prices remained at high levels and the prices of many other commodities, including oil, coal and base metals, had increased strongly in recent months. The rebound in energy prices had been supported by cold weather in the northern hemisphere and the strong recovery in industrial production; base metals prices had also benefited from the rebound in global industrial activity. Other input costs, such as those for shipping, had also risen sharply in preceding months."
+
+## Test text
+
+text = " I do not care. I don't care. Please don't do that."
+
+## Phrase matcher
+
 matcher_negative = PhraseMatcher(nlp.vocab)
 matcher_positive = PhraseMatcher(nlp.vocab)
+
+#-------------------------------------Dictionary--------------------------------------------------# 
+
+## Load in dictionary 
+
 xlsx = pd.ExcelFile('LoughranMcDonald_SentimentWordLists_2018.xlsx')
 
-### Dictionary ### 
+## Read dictionary
 
 negative = pd.read_excel(xlsx, 'Negative')
 positive = pd.read_excel(xlsx, 'Positive')
 
+## Remove duplicate function
+
 def removedup(x):
   return list(dict.fromkeys(x))
+
+## Append missing values that were cut off 
 
 positivelist=positive.values.tolist()
 positivelist += [["ABLE"]]
 negativelist = negative.values.tolist()
 negativelist += [["ABANDON"]]
+
+## Transforming dictionary into a flattened list, and processing each word (e.g. lemmatisation, lower case)
 
 positive_list = []
 for sublist in positivelist:
@@ -48,11 +66,27 @@ for sublist in negativelist:
                 if word.text[-2:] == "ly":
                     word.lemma_ = word.lemma_[:-2]
             negative_list.append(word.lemma_.lower())
+
+## This is removing unemployment given its ambigious context - will investigate other words like high, low
 negative_list.remove('unemployed')
 negative_list.remove('unemployment')
 negative_list = removedup(negative_list)
 
-#+# Dictionary #+# 
+#-------------------------------------Putting dictionary into phrase matcher for Spacy--------------------------------------------------#
+
+neglist = [nlp.make_doc(text) for text in negative_list]
+matcher_negative.add("Negativewords", neglist)
+
+poslist = [nlp.make_doc(text) for text in positive_list]
+matcher_positive.add("Positivewords", poslist)
+
+neglist = [nlp.make_doc(text) for text in negative_list]
+matcher_negative.add("Negativewords", neglist)
+
+poslist = [nlp.make_doc(text) for text in positive_list]
+matcher_positive.add("Positivewords", poslist)
+
+#-------------------------------------Taking JSON data and putting it into list--------------------------------------------------#
 
 nlp.add_pipe('sentencizer')
 with open('test_data.json') as json_file:
@@ -66,12 +100,26 @@ for p in data:
 
 data_list = data_flattened.values()
 
-nlp.Defaults.stop_words -= {"n't", "not"}
+#-------------------------------------Tokenisation process--------------------------------------------------#
+
+## Adjusting stopwords
+
+# nlp.Defaults.stop_words -= {"n't", "not"}
+# 
+# def remove_stopwords(minutes):
+#  bag = nlp(minutes)
+#  processed_minutes = ' '.join([token.text for token in bag if token.is_stop != True ])
+#  return processed_minutes
+
+stopwords = nlp.Defaults.stop_words
+stopwords -= {"n't", "not", "no"}
 
 def remove_stopwords(minutes):
  bag = nlp(minutes)
- processed_minutes = ' '.join([token.text for token in bag if token.is_stop != True ])
+ processed_minutes = ' '.join([token.text for token in bag if token.text.lower() not in stopwords ])
  return processed_minutes
+ 
+## Removing punctuation
 
 def remove_punctuation_special_chars(minutes):
  bag = nlp(minutes)
@@ -83,10 +131,14 @@ def remove_punctuation_special_chars(minutes):
      token.is_digit != True])
  return processed_minutes
 
+## Lowercase
+
 def lowercase(minutes):
     bag = nlp(minutes)
     processed_minutes = ' '.join([token.text.lower() for token in bag])
     return processed_minutes
+
+## Lemmatization
 
 def lemmatize_text(minutes):
     bag = nlp(minutes)
@@ -98,7 +150,8 @@ def lemmatize_text(minutes):
         processed_minutes = processed_minutes + " " + "" +tokens.lemma_
     return processed_minutes
 
-### For running on text string ###
+#-------------------------------------Test code for test text--------------------------------------------------#
+
 
 text = remove_punctuation_special_chars(text)
 text = remove_stopwords(text)
@@ -106,9 +159,10 @@ text = lowercase(text)
 text = lemmatize_text(text)
 print(text)
 
-#+# For running on text string #+#
 
-### For running on json files ###
+
+#-------------------------------------Code for running on JSON--------------------------------------------------#
+
 
 # string = ""
 # for paragraph in data_list:
@@ -123,18 +177,7 @@ print(text)
 # string = lowercase(string)
 # string = lemmatize_text(string)
 
-#+# For running on json files #+#
-
-
-### Defining list of negative and positive words ###
-
-neglist = [nlp.make_doc(text) for text in negative_list]
-matcher_negative.add("Negativewords", neglist)
-
-poslist = [nlp.make_doc(text) for text in positive_list]
-matcher_positive.add("Positivewords", poslist)
-
-#+# Defining list of negative and positive words #+#
+#-------------------------------------Identifying negative and positive words in sample--------------------------------------------------#
 
 doc = nlp(text)
 negative_matches = matcher_negative(doc)
@@ -147,8 +190,6 @@ with open("words.txt", "w") as text_file:
     for match_id, start, end in positive_matches:
         text_file.write("Positive word: " + doc[start:end].text + '\n')
 text_file.close()
-
-#+# Identifying negative and positive words #+#
 
 
 
