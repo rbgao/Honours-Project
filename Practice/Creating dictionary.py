@@ -38,5 +38,3 @@ negative_list.remove('unemployed')
 negative_list.remove('unemployment')
 negative_list = removedup(negative_list)
 
-print(negative_list)
-
