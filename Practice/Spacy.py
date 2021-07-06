@@ -1,9 +1,9 @@
 #-------------------------------------Packages--------------------------------------------------#
 
-import xlwt 
 import json
 import spacy
 import pandas as pd
+from pandas import DataFrame
 from json_flatten import flatten
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Token
@@ -16,7 +16,7 @@ nlp = spacy.load('en_core_web_sm')
 
 ## Test text
 
-# text = "Members noted that the rebound in the demand for goods globally and the upturn in industrial production, particularly in China and elsewhere in east Asia, had continued to support commodity prices. Iron ore prices remained at high levels and the prices of many other commodities, including oil, coal and base metals, had increased strongly in recent months. The rebound in energy prices had been supported by cold weather in the northern hemisphere and the strong recovery in industrial production; base metals prices had also benefited from the rebound in global industrial activity. Other input costs, such as those for shipping, had also risen sharply in preceding months."
+# text = "not Members noted that the rebound in the demand for goods globally and the upturn in industrial production, particularly in China and elsewhere in east Asia, had continued to support commodity prices. Iron ore prices remained at high levels and the prices of many other commodities, including oil, coal and base metals, had increased strongly in recent months. The rebound in energy prices had been supported by cold weather in the northern hemisphere and the strong recovery in industrial production; base metals prices had also benefited from the rebound in global industrial activity. Other input costs, such as those for shipping, had also risen sharply in preceding months."
 
 ## Phrase matcher
 
@@ -97,21 +97,6 @@ matcher_negative.add("Negativewords", neglist)
 poslist = [nlp.make_doc(text) for text in positive_list]
 matcher_positive.add("Positivewords", poslist)
 
-#-------------------------------------Set up output file--------------------------------------------------#
-
-# def output(filename, sheet, list1, list2, list3, list4, x):
-#     book = xlwt.Workbook()
-#     sh = book.add_sheet(sheet)
-# 
-#     variables = [x]
-#     x_desc = 'Title'
-#     desc = [x_desc]
-# 
-#     col1_name = 'Date'
-#     col2_name = 'Negative word count'
-#     col3_name = 'Positive word count'
-#     col4_name = 'Net negativity score'
-
 #-------------------------------------Tokenisation process--------------------------------------------------#
 
 ## Adjusting stopwords
@@ -169,7 +154,8 @@ def negation_words(input):
     for token in doc:
         if token.text == "n't" or token.text == "not" or token.text == "no":
             token._.is_negation = True
-            doc[token.i+1]._.is_negation = True 
+            if doc[token.i+1].text in positive_list or doc[token.i+1].text in negative_list:
+                doc[token.i+1]._.is_negation = True 
     processed_minutes = " ".join([token.text for token in doc if token._.is_negation == False])
     return processed_minutes
 
@@ -180,7 +166,16 @@ def negation_words(input):
 # text = lowercase(text)
 # text = lemmatize_text(text)
 # text = negation_words(text)
-## print(text)
+# print(text)
+# doc = nlp(text)
+# number = -1
+# for token in doc:
+#     number += 1
+# print(number)
+# with open("words.txt", "w") as text_file:
+#     for token in doc:
+#         text_file.write(token.text+ " \n")
+# text_file.close()
 
 #-------------------------------------Creating lists for dates and matches ready for excel--------------------------------------------------#
 
@@ -194,25 +189,60 @@ number_difference = []
 
 number_total = []
 
-
+net_negativity_score = []
 
 #-------------------------------------Opening JSON file--------------------------------------------------#
 
 with open('test_data.json') as json_file:
  data = json.load(json_file)
 
-#-------------------------------------Looping over each date in JSON, and flattening to a list--------------------------------------------------#
+#-------------------------------------Looping over each date in JSON, and flattening to a list. Deleting useless elements--------------------------------------------------#
 
 for p in data:
-    # del data[0]['Text']['Members present']
-    # del data[0]['Text']['Others participating']
-    # del data[0]['Text']['The decision']
+    dates += p['Date']
+    del p['Date']
+    try:
+        del p['Text']['Members Present']
+    except: 
+        pass
+    try:
+        del p['Text']['Members present']
+    except: 
+        pass
+    try:
+        del p['Text']['Others Present']
+    except: 
+        pass
+    try:
+        del p['Text']['Others present']
+    except: 
+        pass
+    try:
+        del p['Text']['Members Participating']
+    except: 
+        pass
+    try:
+        del p['Text']['Members participating']
+    except: 
+        pass
+    try:
+        del p['Text']['Others Participating']
+    except: 
+        pass
+    try:
+        del p['Text']['Others participating']
+    except: 
+        pass
+    try:
+        del p['Text']['The decision']
+    except: 
+        pass
+    try:
+        del p['Text']['The Decision']
+    except: 
+        pass
     data_flattened=flatten(p)
     data_list = data_flattened.values()
-    
-#-------------------------------------Putting date into list--------------------------------------------------#
-
-    dates += p['Date']
 
 #-------------------------------------Turning the text in each date into a string, and cleaning it--------------------------------------------------#
 
@@ -228,6 +258,7 @@ for p in data:
     string = remove_stopwords(string)
     string = lowercase(string)
     string = lemmatize_text(string)
+    string = negation_words(string)
 
 #-------------------------------------Identifying negative and positive words for each date--------------------------------------------------#
 
@@ -245,21 +276,41 @@ for p in data:
     number_difference.append(len(negative_matches) - len(positive_matches))
 
     #print("Total number of tokens:", len(doc))
-    number_total.append(len(doc))
+    number = -1
+    for token in doc:
+        number += 1
+    number_total.append(number)
 
+    net_negativity_score.append((len(negative_matches) - len(positive_matches))/len(doc))
+
+    with open("words1.txt", "w") as text_file:
+        for token in doc:
+            text_file.write(token.text+ " \n")
+    #for match_id, start, end in negative_matches:
+    #    text_file.write("Negative word: " + doc[start:end].text + " \n")
+    #for match_id, start, end in positive_matches:
+    #    text_file.write("Positive word: " + doc[start:end].text + '\n')
+    text_file.close()
+
+#-------------------------------------Cleaning up dates--------------------------------------------------#
+
+for date in dates:
+        date = remove_punctuation_special_chars(date)
+
+#-------------------------------------Printing out lists--------------------------------------------------#
 print(dates)
 print(number_negative)
 print(number_positive)
 print(number_difference)
 print(number_total)
-# with open("words.txt", "w") as text_file:
-#     for match_id, start, end in negative_matches:
-#         text_file.write("Negative word: " + doc[start:end].text + " \n")
-#     for match_id, start, end in positive_matches:
-#         text_file.write("Positive word: " + doc[start:end].text + '\n')
-# text_file.close()
 
+#-------------------------------------Output to excel--------------------------------------------------#
 
+# df = DataFrame({'Dates': dates, 'Number of negative words': number_negative, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score})
+# 
+# print(df) 
+# 
+# df.to_excel('test.xlsx', sheet_name='sheet1', index=False)
 
 ### Don't worry about this ###
 # import spacy
