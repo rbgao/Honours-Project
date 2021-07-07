@@ -1,5 +1,6 @@
 #-------------------------------------Packages--------------------------------------------------#
 
+import re
 import json
 import spacy
 import pandas as pd
@@ -16,7 +17,7 @@ nlp = spacy.load('en_core_web_sm')
 
 ## Test text
 
-# text = "not Members noted that the rebound in the demand for goods globally and the upturn in industrial production, particularly in China and elsewhere in east Asia, had continued to support commodity prices. Iron ore prices remained at high levels and the prices of many other commodities, including oil, coal and base metals, had increased strongly in recent months. The rebound in energy prices had been supported by cold weather in the northern hemisphere and the strong recovery in industrial production; base metals prices had also benefited from the rebound in global industrial activity. Other input costs, such as those for shipping, had also risen sharply in preceding months."
+text = "Information from the capital expenditure (capex) survey and preliminary data on non-residential construction work done suggested that both non-mining and mining investment had decreased in the December quarter, led by weakness in building and engineering investment. However, mining firms had continued to expect solid growth in investment over the rest of <span class=\"no-wrap\">2019/20</span>."
 
 ## Phrase matcher
 
@@ -159,13 +160,19 @@ def negation_words(input):
     processed_minutes = " ".join([token.text for token in doc if token._.is_negation == False])
     return processed_minutes
 
+## HTML Stripper
+
+def strip_tags(text):
+    return text.replace(u'<span class=\"no-wrap\">', '').replace(u'</span>', '')
 #-------------------------------------Test code for test text--------------------------------------------------#
 
+# text = strip_tags(text)
 # text = remove_punctuation_special_chars(text)
 # text = remove_stopwords(text)
 # text = lowercase(text)
 # text = lemmatize_text(text)
 # text = negation_words(text)
+# 
 # print(text)
 # doc = nlp(text)
 # number = -1
@@ -179,7 +186,9 @@ def negation_words(input):
 
 #-------------------------------------Creating lists for dates and matches ready for excel--------------------------------------------------#
 
-dates = []
+dates_1 = []
+
+dates_2 = []
 
 number_negative = []
 
@@ -193,13 +202,13 @@ net_negativity_score = []
 
 #-------------------------------------Opening JSON file--------------------------------------------------#
 
-with open('test_data.json') as json_file:
+with open('Cleaned-data.json', encoding='utf-8') as json_file:
  data = json.load(json_file)
 
 #-------------------------------------Looping over each date in JSON, and flattening to a list. Deleting useless elements--------------------------------------------------#
 
 for p in data:
-    dates += p['Date']
+    dates_1 += p['Date']
     del p['Date']
     try:
         del p['Text']['Members Present']
@@ -239,6 +248,26 @@ for p in data:
         pass
     try:
         del p['Text']['The Decision']
+    except: 
+        pass
+    try:
+        del p['Text']['Present']
+    except: 
+        pass
+    try:
+        del p['Text']['Minutes']
+    except: 
+        pass
+    try:
+        del p['Text']['Board Member']
+    except: 
+        pass
+    try:
+        del p['Text']['Board Members']
+    except: 
+        pass
+    try:
+        del p['Text']['Governor - Final Meeting'] ## Maybe not? 
     except: 
         pass
     data_flattened=flatten(p)
@@ -282,36 +311,44 @@ for p in data:
     number_total.append(number)
 
     net_negativity_score.append((len(negative_matches) - len(positive_matches))/len(doc))
-
-    with open("words1.txt", "w") as text_file:
-        for token in doc:
-            text_file.write(token.text+ " \n")
-    #for match_id, start, end in negative_matches:
-    #    text_file.write("Negative word: " + doc[start:end].text + " \n")
-    #for match_id, start, end in positive_matches:
-    #    text_file.write("Positive word: " + doc[start:end].text + '\n')
-    text_file.close()
+    
+    #with open("words1.txt", "w") as text_file:
+    #    for token in doc:
+    #        text_file.write(token.text+ " \n")
+    ##for match_id, start, end in negative_matches:
+    ##    text_file.write("Negative word: " + doc[start:end].text + " \n")
+    ##for match_id, start, end in positive_matches:
+    ##    text_file.write("Positive word: " + doc[start:end].text + '\n')
+    #text_file.close()
 
 #-------------------------------------Cleaning up dates--------------------------------------------------#
 
-for date in dates:
-        date = remove_punctuation_special_chars(date)
+for date in dates_1:
+        location_date = date.replace(u'\xa0', ' ')
+        sep = '– ' 
+        sep1 = "- "
+        date_only = location_date.split(sep, 1)[-1]
+        date_only = date_only.split(sep1, 1)[-1]
+        dates_2.append(date_only)
+
 
 #-------------------------------------Printing out lists--------------------------------------------------#
-print(dates)
-print(number_negative)
-print(number_positive)
-print(number_difference)
-print(number_total)
+
+# print(dates_2)
+# print(number_negative)
+# print(number_positive)
+# print(number_difference)
+# print(number_total)
 
 #-------------------------------------Output to excel--------------------------------------------------#
 
-# df = DataFrame({'Dates': dates, 'Number of negative words': number_negative, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score})
-# 
-# print(df) 
-# 
-# df.to_excel('test.xlsx', sheet_name='sheet1', index=False)
+df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score})
 
+print(df) 
+
+df.to_excel('test.xlsx', sheet_name='sheet1', index=False)
+
+print("Done")
 ### Don't worry about this ###
 # import spacy
 # from spacy.lang.en import English # updated
