@@ -1,10 +1,11 @@
-
+from pandas import DataFrame
+from datetime import datetime
 import spacy
 from spacy.tokens import Token
 from pprint import pprint
 import json
 
-with open('Cleaned-data.json', encoding='utf-8') as json_file:
+with open('test_data.json', encoding='utf-8') as json_file:
  data = json.load(json_file)
 
 #-------------------------------------Identify all useless keys--------------------------------------------------#
@@ -48,9 +49,18 @@ for date in Dates:
         sep1 = "- "
         date_only = location_date.split(sep, 1)[-1]
         date_only = date_only.split(sep1, 1)[-1]
-        dates_2.append(date_only)
+        converted_date = datetime.strptime(date_only, '%d %B %Y')
+        dates_2.append(converted_date.date())
 
-print(dates_2)
+#print(dates_2)
+
+df = DataFrame({'Dates': dates_2, 'Values': ['3','2']})
+
+df = df.sort_values(by="Values")
+print(df) 
+
+df.to_excel('test1.xlsx', sheet_name='sheet1', index=False)
+
 # Token.set_extension("is_negation", default=False)
 # assert Token.has_extension("is_negation")
 # 

@@ -8,6 +8,7 @@ from pandas import DataFrame
 from json_flatten import flatten
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Token
+from datetime import datetime
 
 #-------------------------------------Setup--------------------------------------------------#
 
@@ -321,7 +322,7 @@ for p in data:
     ##    text_file.write("Positive word: " + doc[start:end].text + '\n')
     #text_file.close()
 
-#-------------------------------------Cleaning up dates--------------------------------------------------#
+#-------------------------------------Cleaning up dates and converting them to datetime format--------------------------------------------------#
 
 for date in dates_1:
         location_date = date.replace(u'\xa0', ' ')
@@ -329,7 +330,8 @@ for date in dates_1:
         sep1 = "- "
         date_only = location_date.split(sep, 1)[-1]
         date_only = date_only.split(sep1, 1)[-1]
-        dates_2.append(date_only)
+        converted_date = datetime.strptime(date_only, '%d %B %Y')
+        dates_2.append(converted_date)
 
 
 #-------------------------------------Printing out lists--------------------------------------------------#
@@ -340,9 +342,11 @@ for date in dates_1:
 # print(number_difference)
 # print(number_total)
 
-#-------------------------------------Output to excel--------------------------------------------------#
+#-------------------------------------Output to excel by putting lists into each column, and then sorting by date--------------------------------------------------#
 
 df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score})
+
+df = df.sort_values(by="Dates")
 
 print(df) 
 
