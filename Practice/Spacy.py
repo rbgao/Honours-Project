@@ -18,12 +18,13 @@ nlp = spacy.load('en_core_web_sm')
 
 ## Test text
 
-text = "Information from the capital expenditure (capex) survey and preliminary data on non-residential construction work done suggested that both non-mining and mining investment had decreased in the December quarter, led by weakness in building and engineering investment. However, mining firms had continued to expect solid growth in investment over the rest of <span class=\"no-wrap\">2019/20</span>."
+# text = "Information from the capital expenditure (capex) survey and preliminary data on non-residential construction work done suggested that both non-mining and mining investment had decreased in the December quarter, led by weakness in building and engineering investment. However, mining firms had continued to expect solid growth in investment over the rest of <span class=\"no-wrap\">2019/20</span>."
 
 ## Phrase matcher
 
 matcher_negative = PhraseMatcher(nlp.vocab)
 matcher_positive = PhraseMatcher(nlp.vocab)
+matcher_negative_with_unemploy = PhraseMatcher(nlp.vocab)
 
 ## is_negation new attribute for SpaCy tokens
 
@@ -81,20 +82,20 @@ for sublist in negativelist:
             negative_list.append(word.lemma_.lower())
 
 ## This is removing unemployment given its ambigious context - will investigate other words like high, low
+negative_list_with_unemploy = removedup(negative_list)
 negative_list.remove('unemployed')
 negative_list.remove('unemployment')
 negative_list = removedup(negative_list)
+
+## Keeping them in 
 
 #-------------------------------------Putting dictionary into phrase matcher for Spacy--------------------------------------------------#
 
 neglist = [nlp.make_doc(text) for text in negative_list]
 matcher_negative.add("Negativewords", neglist)
 
-poslist = [nlp.make_doc(text) for text in positive_list]
-matcher_positive.add("Positivewords", poslist)
-
-neglist = [nlp.make_doc(text) for text in negative_list]
-matcher_negative.add("Negativewords", neglist)
+neglist_with_unemploy =  [nlp.make_doc(text) for text in negative_list_with_unemploy]
+matcher_negative_with_unemploy.add("Negativewords", neglist_with_unemploy)
 
 poslist = [nlp.make_doc(text) for text in positive_list]
 matcher_positive.add("Positivewords", poslist)
@@ -193,13 +194,23 @@ dates_2 = []
 
 number_negative = []
 
+number_negative_with_unemploy = []
+
 number_positive = []
 
 number_difference = []
 
+number_difference_with_unemploy = [] 
+
 number_total = []
 
 net_negativity_score = []
+
+net_negativity_score_with_unemploy = []
+
+percentage_negative = [] 
+
+percentage_positive = []
 
 #-------------------------------------Opening JSON file--------------------------------------------------#
 
@@ -297,6 +308,10 @@ for p in data:
     negative_matches = matcher_negative(doc)
     #print("Negative matches found:", len(negative_matches))
     number_negative.append(len(negative_matches))
+    
+    negative_matches_with_unemploy = matcher_negative_with_unemploy(doc)
+    #print("Negative matches found:", len(negative_matches))
+    number_negative_with_unemploy.append(len(negative_matches_with_unemploy))
 
     positive_matches = matcher_positive(doc)
     #print("Positive matches found:", len(positive_matches))
@@ -305,13 +320,21 @@ for p in data:
     #print("Net negativity score:", len(negative_matches) - len(positive_matches))
     number_difference.append(len(negative_matches) - len(positive_matches))
 
+    number_difference_with_unemploy.append(len(negative_matches_with_unemploy) - len(positive_matches))
+
     #print("Total number of tokens:", len(doc))
     number = -1
     for token in doc:
         number += 1
     number_total.append(number)
 
-    net_negativity_score.append((len(negative_matches) - len(positive_matches))/len(doc))
+    net_negativity_score.append((len(negative_matches) - len(positive_matches))/number)
+    
+    net_negativity_score_with_unemploy.append((len(negative_matches_with_unemploy) - len(positive_matches))/number)
+    
+    percentage_negative.append(len(negative_matches)/number)
+
+    percentage_positive.append(len(positive_matches)/number)
     
     #with open("words1.txt", "w") as text_file:
     #    for token in doc:
@@ -344,7 +367,17 @@ for date in dates_1:
 
 #-------------------------------------Output to excel by putting lists into each column, and then sorting by date--------------------------------------------------#
 
-df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score})
+print(len(dates_2))
+print(len(number_negative))
+print(len(number_positive))
+print(len(number_negative_with_unemploy))
+print(len(number_difference))
+print(len(number_total))
+print(len(net_negativity_score_with_unemploy))
+print(len(net_negativity_score))
+print(len(percentage_negative))
+print(len(percentage_positive))
+df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive})
 
 df = df.sort_values(by="Dates")
 
