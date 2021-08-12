@@ -9,7 +9,26 @@ from json_flatten import flatten
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Token
 from datetime import datetime
+from io import StringIO
 
+from html.parser import HTMLParser
+
+class MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs= True
+        self.text = StringIO()
+    def handle_data(self, d):
+        self.text.write(d)
+    def get_data(self):
+        return self.text.getvalue()
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
 #-------------------------------------Setup--------------------------------------------------#
 
 ## Load in NLP
@@ -18,7 +37,7 @@ nlp = spacy.load('en_core_web_sm')
 
 ## Test text
 
-# text = "Information from the capital expenditure (capex) survey and preliminary data on non-residential construction work done suggested that both non-mining and mining investment had decreased in the December quarter, led by weakness in building and engineering investment. However, mining firms had continued to expect solid growth in investment over the rest of <span class=\"no-wrap\">2019/20</span>."
+#text = "In recent years, this significant increase in the cost of obtaining US dollars in short-term swaps had been commonplace for some other currencies (e.g. euro and yen) at year-end, but not for the Australian dollar (Graph 3). However, this year the effect of elevated year-end demand for US dollars in swap markets on the Australian dollar basis has been much larger than normal. This is consistent with the smaller supply of US dollars from the Australian banks than in the past.<sup class=\"footnote-reference\"><a href=\"#fn2\" id=\"r2\" aria-label=\"Go to endnote 2\">[2]</a></sup> <span class=\"no-wrap\">"
 
 ## Phrase matcher
 
@@ -157,25 +176,28 @@ def negation_words(input):
     for token in doc:
         if token.text == "n't" or token.text == "not" or token.text == "no":
             token._.is_negation = True
-            if doc[token.i+1].text in positive_list or doc[token.i+1].text in negative_list:
-                doc[token.i+1]._.is_negation = True 
+            try:
+                if doc[token.i+1].text in positive_list or doc[token.i+1].text in negative_list:
+                    doc[token.i+1]._.is_negation = True 
+            except:
+                pass
     processed_minutes = " ".join([token.text for token in doc if token._.is_negation == False])
     return processed_minutes
 
 ## HTML Stripper
 
-def strip_tags(text):
-    return text.replace(u'<span class=\"no-wrap\">', '').replace(u'</span>', '')
+#def strip_tags(text):
+#    return text.replace(u'<span class=\"no-wrap\">', '').replace(u'</span>', '')
 #-------------------------------------Test code for test text--------------------------------------------------#
 
-# text = strip_tags(text)
-# text = remove_punctuation_special_chars(text)
-# text = remove_stopwords(text)
-# text = lowercase(text)
-# text = lemmatize_text(text)
-# text = negation_words(text)
-# 
-# print(text)
+#text = strip_tags(text)
+#text = remove_punctuation_special_chars(text)
+#text = remove_stopwords(text)
+#text = lowercase(text)
+#text = lemmatize_text(text)
+#text = negation_words(text)
+#
+#print(text)
 # doc = nlp(text)
 # number = -1
 # for token in doc:
@@ -191,6 +213,25 @@ def strip_tags(text):
 dates_1 = []
 
 dates_2 = []
+
+dates_first = [] # Use with speeches, as multiple dates
+
+dates_second = [] 
+
+speaker = [] # Use with speeches
+
+speaker_first = []
+
+speaker_second = []
+
+position = [] # Use with speeches
+
+position_first = []
+
+position_second = []
+
+
+number = []
 
 number_negative = []
 
@@ -214,74 +255,103 @@ percentage_positive = []
 
 #-------------------------------------Opening JSON file--------------------------------------------------#
 
-with open('Cleaned-data.json', encoding='utf-8') as json_file:
+with open('speeches_data.json', encoding='utf-8') as json_file:
  data = json.load(json_file)
 
 #-------------------------------------Looping over each date in JSON, and flattening to a list. Deleting useless elements--------------------------------------------------#
+number1 = 0
 
 for p in data:
-    dates_1 += p['Date']
+    
+    dates_first.append(p['Date'][0])
+    try:
+        dates_second.append(p['Date'][1])
+    except:
+        dates_second.append('')
+    
+    speaker_first.append(p['Speaker'][0])
+    try:
+        speaker_second.append(p['Speaker'][1])
+    except:
+        speaker_second.append('')
+
+    position_first.append(p['Position'][0])
+    try:
+        position_second.append(p['Position'][1])
+    except:
+        position_second.append('')
+# print(len(dates_first))
+# print(dates_second)
+# print(len(dates_second))
+# print(len(speaker_first))
+# print(len(speaker_second))
+# print(len(position_first))
+# print(len(position_second))
+
     del p['Date']
-    try:
-        del p['Text']['Members Present']
-    except: 
-        pass
-    try:
-        del p['Text']['Members present']
-    except: 
-        pass
-    try:
-        del p['Text']['Others Present']
-    except: 
-        pass
-    try:
-        del p['Text']['Others present']
-    except: 
-        pass
-    try:
-        del p['Text']['Members Participating']
-    except: 
-        pass
-    try:
-        del p['Text']['Members participating']
-    except: 
-        pass
-    try:
-        del p['Text']['Others Participating']
-    except: 
-        pass
-    try:
-        del p['Text']['Others participating']
-    except: 
-        pass
-    try:
-        del p['Text']['The decision']
-    except: 
-        pass
-    try:
-        del p['Text']['The Decision']
-    except: 
-        pass
-    try:
-        del p['Text']['Present']
-    except: 
-        pass
-    try:
-        del p['Text']['Minutes']
-    except: 
-        pass
-    try:
-        del p['Text']['Board Member']
-    except: 
-        pass
-    try:
-        del p['Text']['Board Members']
-    except: 
-        pass
-    try:
-        del p['Text']['Governor - Final Meeting'] ## Maybe not? 
-    except: 
-        pass
+    del p['Speaker']
+    del p['Position']
+    del p['URL']
+#    try:
+#        del p['Text']['Members Present']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Members present']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Others Present']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Others present']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Members Participating']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Members participating']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Others Participating']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Others participating']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['The decision']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['The Decision']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Present']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Minutes']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Board Member']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Board Members']
+#    except: 
+#        pass
+#    try:
+#        del p['Text']['Governor - Final Meeting'] ## Maybe not? 
+#    except: 
+#        pass
     data_flattened=flatten(p)
     data_list = data_flattened.values()
 
@@ -335,6 +405,9 @@ for p in data:
     percentage_negative.append(len(negative_matches)/number)
 
     percentage_positive.append(len(positive_matches)/number)
+
+    number1 += 1
+    print(number1)
     
     #with open("words1.txt", "w") as text_file:
     #    for token in doc:
@@ -345,17 +418,16 @@ for p in data:
     ##    text_file.write("Positive word: " + doc[start:end].text + '\n')
     #text_file.close()
 
-#-------------------------------------Cleaning up dates and converting them to datetime format--------------------------------------------------#
+#-------------------------------------Cleaning up dates and converting them to datetime format for minutes--------------------------------------------------#
 
-for date in dates_1:
-        location_date = date.replace(u'\xa0', ' ')
-        sep = '– ' 
-        sep1 = "- "
-        date_only = location_date.split(sep, 1)[-1]
-        date_only = date_only.split(sep1, 1)[-1]
-        converted_date = datetime.strptime(date_only, '%d %B %Y')
-        dates_2.append(converted_date)
-
+#for date in dates_1:
+#        location_date = date.replace(u'\xa0', ' ')
+#        sep = '– ' 
+#        sep1 = "- "
+#        date_only = location_date.split(sep, 1)[-1]
+#        date_only = date_only.split(sep1, 1)[-1]
+#        converted_date = datetime.strptime(date_only, '%d %B %Y')
+#        dates_2.append(converted_date)
 
 #-------------------------------------Printing out lists--------------------------------------------------#
 
@@ -367,17 +439,23 @@ for date in dates_1:
 
 #-------------------------------------Output to excel by putting lists into each column, and then sorting by date--------------------------------------------------#
 
-print(len(dates_2))
-print(len(number_negative))
-print(len(number_positive))
-print(len(number_negative_with_unemploy))
-print(len(number_difference))
-print(len(number_total))
-print(len(net_negativity_score_with_unemploy))
-print(len(net_negativity_score))
-print(len(percentage_negative))
-print(len(percentage_positive))
-df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive})
+#print(len(dates_2))
+#print(len(number_negative))
+#print(len(number_positive))
+#print(len(number_negative_with_unemploy))
+#print(len(number_difference))
+#print(len(number_total))
+#print(len(net_negativity_score_with_unemploy))
+#print(len(net_negativity_score))
+#print(len(percentage_negative))
+#print(len(percentage_positive))
+
+## For speeches
+df = DataFrame({'Dates': dates_first,'Second date': dates_second, 'Speaker':speaker_first, 'Position': position_first ,'Secondary speaker': speaker_second, 'Seconday position': position_second, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive})
+
+
+## For minutes
+# For minutes df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive, 'Speaker': speaker, 'Position': position})
 
 df = df.sort_values(by="Dates")
 
@@ -386,41 +464,3 @@ print(df)
 df.to_excel('test.xlsx', sheet_name='sheet1', index=False)
 
 print("Done")
-### Don't worry about this ###
-# import spacy
-# from spacy.lang.en import English # updated
-# from spacy.lang.en.stop_words import STOP_WORDS
-# from collections import Counter
-# import re
-# 
-# nlp = spacy.load("en_core_web_sm")
-# 
-# def split_minutess(document):
-#  minutess = [sent.string.strip() for sent in doc.sents]
-#  return minutess
-# 
-# def remove_stopwords(minutes):
-#  minutes = nlp(minutes)
-#  processed_minutes = ' '.join([token.text for token in minutes if token.is_stop != True ])
-#  return processed_minutes
-# Removes stopwords from spaCy default stopword list
-# nlp.Defaults.stop_words -= {"my_stopword_1", "my_stopword_2"}
-# # Adds custom stopwords into spaCy default stopword list
-# nlp.Defaults.stop_words |= {"my_stopword_1", "my_stopword_2"}
-# # Prints spaCy default stopwords
-# def remove_punctuation_special_chars(minutes):
-#  minutes = nlp(minutes)
-#  processed_minutes = ' '.join([token.text for token in minutes 
-#  if token.is_punct != True and 
-#      token.is_quote != True and 
-#      token.is_bracket != True and 
-#      token.is_currency != True and 
-#      token.is_digit != True])
-#  return processed_minutes
-# 
-# def lemmatize_text(minutes):
-#     minutes = nlp(minutes)
-#     processed_minutes = ' '.join([word.lemma_ for word in 
-#     minutes])
-#     
-#     return processed_minutes
