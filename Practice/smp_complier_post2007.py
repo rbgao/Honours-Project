@@ -1,5 +1,7 @@
 
 import json
+from footnote_stripper import footnote_stripper
+from unicode_stripper import unicode_stripper
 
 Dates = []
 

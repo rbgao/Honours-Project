@@ -4,6 +4,9 @@ from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import Selector
 
+from html_stripper import strip_tags
+from emptyspace_stripper import emptyspace
+
 #selector = Selector(text=HTML)
 
 class MySpider(CrawlSpider):
@@ -21,11 +24,11 @@ class MySpider(CrawlSpider):
         cleantext = []
         text = response.xpath('//div[@id="content"]/p').extract()
         for paragraph in text:
-            cleantext.append(paragraph.replace('\r','').replace('\n',' ').replace('\t','').replace('\xa0',' ').replace('<p>','').replace('</p>',''))
+            cleantext.append(strip_tags(emptyspace(paragraph)))
         
         dotpoints = response.xpath('//div[@id="content"]//li[not(ancestor::ul/@class="links")]').extract()
         for point in dotpoints:
-            cleantext.append(point.replace('\r','').replace('\n',' ').replace('\t','').replace('\xa0',' ').replace('<p>','').replace('</p>',''))
+            cleantext.append(strip_tags(emptyspace(point)))
 
         url = response.request.url
         if re.search(r'https:\/\/www.rba.gov.au\/speeches\/\d+\/sp.*\d.html', url):

@@ -1,5 +1,6 @@
 #-------------------------------------Packages--------------------------------------------------#
 
+# from unicode_stripper import unicode_stripper
 import re
 import json
 import spacy
@@ -9,26 +10,11 @@ from json_flatten import flatten
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Token
 from datetime import datetime
-from io import StringIO
+from footnote_stripper import footnote_stripper
 
-from html.parser import HTMLParser
+from html_stripper import strip_tags
 
-class MLStripper(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.reset()
-        self.strict = False
-        self.convert_charrefs= True
-        self.text = StringIO()
-    def handle_data(self, d):
-        self.text.write(d)
-    def get_data(self):
-        return self.text.getvalue()
 
-def strip_tags(html):
-    s = MLStripper()
-    s.feed(html)
-    return s.get_data()
 #-------------------------------------Setup--------------------------------------------------#
 
 ## Load in NLP
@@ -37,7 +23,7 @@ nlp = spacy.load('en_core_web_sm')
 
 ## Test text
 
-#text = "<li>they have expertise in <strong>credit and liquidity risk management</strong>, having a long history and ongoing relationships that generate private information about customers.</li>"
+#text = "Conditions in the labour market are also firm. Employment increased strongly in September, following some softer figures in the previous three months, with the unemployment rate remaining around 5\u00bd per cent."
 
 ## Phrase matcher
 
@@ -192,7 +178,7 @@ def negation_words(input):
 #text = lowercase(text)
 #text = lemmatize_text(text)
 #text = negation_words(text)
-#
+# 
 #print(text)
 # doc = nlp(text)
 # number = -1
@@ -251,161 +237,163 @@ percentage_positive = []
 
 #-------------------------------------Opening JSON file--------------------------------------------------#
 
-with open('speeches_data.json', encoding='utf-8') as json_file:
- data = json.load(json_file)
-
-#-------------------------------------Looping over each date in JSON, and flattening to a list. Deleting useless elements--------------------------------------------------#
-number1 = 0
-
-for p in data:
-    
-
-    dates_first.append(p['Date'][0])
-    #try:
-    #    dates_second.append(p['Date'][1])
-    #except:
-    #    dates_second.append('')
-    #
-    #speaker_first.append(p['Speaker'][0])
-    #try:
-    #    speaker_second.append(p['Speaker'][1])
-    #except:
-    #    speaker_second.append('')
+with open('test_smp_data_s.json', encoding='utf-8') as json_file:
+    data = json.load(json_file)
 #
-    #position_first.append(p['Position'][0])
-    #try:
-    #    position_second.append(p['Position'][1])
-    #except:
-    #    position_second.append('')
-    del p['Date']
-    #del p['Speaker']
-    #del p['Position']
-    #del p['URL']
-#    try:
-#        del p['Text']['Members Present']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Members present']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Others Present']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Others present']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Members Participating']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Members participating']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Others Participating']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Others participating']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['The decision']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['The Decision']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Present']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Minutes']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Board Member']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Board Members']
-#    except: 
-#        pass
-#    try:
-#        del p['Text']['Governor - Final Meeting'] ## Maybe not? 
-#    except: 
-#        pass
+##-------------------------------------Looping over each date in JSON, and flattening to a list. Deleting useless elements--------------------------------------------------#
+#number1 = 0
+#
+for p in data:
+#
+#    dates_first.append(p['Date'][0])
+#    #try:
+#    #    dates_second.append(p['Date'][1])
+#    #except:
+#    #    dates_second.append('')
+#    #
+#    #speaker_first.append(p['Speaker'][0])
+#    #try:
+#    #    speaker_second.append(p['Speaker'][1])
+#    #except:
+#    #    speaker_second.append('')
+##
+#    #position_first.append(p['Position'][0])
+#    #try:
+#    #    position_second.append(p['Position'][1])
+#    #except:
+#    #    position_second.append('')
+#    del p['Date']
+#    #del p['Speaker']
+#    #del p['Position']
+#    #del p['URL']
+##    try:
+##        del p['Text']['Members Present']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Members present']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Others Present']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Others present']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Members Participating']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Members participating']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Others Participating']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Others participating']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['The decision']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['The Decision']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Present']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Minutes']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Board Member']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Board Members']
+##    except: 
+##        pass
+##    try:
+##        del p['Text']['Governor - Final Meeting'] ## Maybe not? 
+##    except: 
+##        pass
     data_flattened=flatten(p)
     data_list = data_flattened.values()
 
-#-------------------------------------Turning the text in each date into a string, and cleaning it--------------------------------------------------#
+##-------------------------------------Turning the text in each date into a string, and cleaning it--------------------------------------------------#
 
     string = ""
     for paragraph in data_list:
+        #paragraph_cleaned = unicode_stripper(string)
         string = string + " " + paragraph
         #para = nlp(paragraph)
         # print(para.text)
         #minutess = [sent.string.strip() for sent in para.sents]
         #print(minutess)
 
+    string = strip_tags(string)
     string = remove_punctuation_special_chars(string)
     string = remove_stopwords(string)
     string = lowercase(string)
     string = lemmatize_text(string)
     string = negation_words(string)
-
-#-------------------------------------Identifying negative and positive words for each date--------------------------------------------------#
+#
+##-------------------------------------Identifying negative and positive words for each date--------------------------------------------------#
 
     doc = nlp(string)
-
-    negative_matches = matcher_negative(doc)
-    #print("Negative matches found:", len(negative_matches))
-    number_negative.append(len(negative_matches))
-    
-    negative_matches_with_unemploy = matcher_negative_with_unemploy(doc)
-    #print("Negative matches found:", len(negative_matches))
-    number_negative_with_unemploy.append(len(negative_matches_with_unemploy))
-
-    positive_matches = matcher_positive(doc)
-    #print("Positive matches found:", len(positive_matches))
-    number_positive.append(len(positive_matches))
-
-    #print("Net negativity score:", len(negative_matches) - len(positive_matches))
-    number_difference.append(len(negative_matches) - len(positive_matches))
-
-    number_difference_with_unemploy.append(len(negative_matches_with_unemploy) - len(positive_matches))
-
-    #print("Total number of tokens:", len(doc))
-    number = -1
-    for token in doc:
-        number += 1
-    number_total.append(number)
-
-    net_negativity_score.append((len(negative_matches) - len(positive_matches))/number)
-    
-    net_negativity_score_with_unemploy.append((len(negative_matches_with_unemploy) - len(positive_matches))/number)
-    
-    percentage_negative.append(len(negative_matches)/number)
-
-    percentage_positive.append(len(positive_matches)/number)
-
-    number1 += 1
-    print(number1)
-    
-    #with open("words1.txt", "w") as text_file:
-    #    for token in doc:
-    #        text_file.write(token.text+ " \n")
-    ##for match_id, start, end in negative_matches:
-    ##    text_file.write("Negative word: " + doc[start:end].text + " \n")
-    ##for match_id, start, end in positive_matches:
-    ##    text_file.write("Positive word: " + doc[start:end].text + '\n')
-    #text_file.close()
+###
+###    negative_matches = matcher_negative(doc)
+###    #print("Negative matches found:", len(negative_matches))
+###    number_negative.append(len(negative_matches))
+###    
+###    negative_matches_with_unemploy = matcher_negative_with_unemploy(doc)
+###    #print("Negative matches found:", len(negative_matches))
+###    number_negative_with_unemploy.append(len(negative_matches_with_unemploy))
+###
+###    positive_matches = matcher_positive(doc)
+###    #print("Positive matches found:", len(positive_matches))
+###    number_positive.append(len(positive_matches))
+###
+###    #print("Net negativity score:", len(negative_matches) - len(positive_matches))
+###    number_difference.append(len(negative_matches) - len(positive_matches))
+###
+###    number_difference_with_unemploy.append(len(negative_matches_with_unemploy) - len(positive_matches))
+### 
+###    #print("Total number of tokens:", len(doc))
+##    number = -1
+##    for token in doc:
+##        number += 1
+##    print(number)
+###    number_total.append(number)
+###
+###    net_negativity_score.append((len(negative_matches) - len(positive_matches))/number)
+###    
+###    net_negativity_score_with_unemploy.append((len(negative_matches_with_unemploy) - len(positive_matches))/number)
+###    
+###    percentage_negative.append(len(negative_matches)/number)
+###
+###    percentage_positive.append(len(positive_matches)/number)
+###
+##    number1 += 1
+##    print(number1)
+##    
+    with open("words1.txt", "a") as text_file:
+        for token in doc:
+            text_file.write(token.text+ " \n")
+    #for match_id, start, end in negative_matches:
+    #    text_file.write("Negative word: " + doc[start:end].text + " \n")
+    #for match_id, start, end in positive_matches:
+    #    text_file.write("Positive word: " + doc[start:end].text + '\n')
+    text_file.close()
 
 #-------------------------------------Cleaning up dates and converting them to datetime format for minutes--------------------------------------------------#
 
@@ -417,6 +405,18 @@ for p in data:
 #        date_only = date_only.split(sep1, 1)[-1]
 #        converted_date = datetime.strptime(date_only, '%d %B %Y')
 #        dates_2.append(converted_date)
+
+#-------------------------------------Cleaning up dates and converting them to datetime format for SMP--------------------------------------------------#
+
+#for date in dates_first:
+#        location_date = date.replace(u'', ' ')
+#        sep = '– ' 
+#        sep1 = "- "
+#        date_only = location_date.split(sep, 1)[-1]
+#        date_only = date_only.split(sep1, 1)[-1]
+#        converted_date = datetime.strptime(date_only, '%B %Y')
+#        dates_2.append(converted_date)
+
 
 #-------------------------------------Printing out lists--------------------------------------------------#
 
@@ -440,16 +440,16 @@ for p in data:
 #print(len(percentage_positive))
 
 ## For speeches
-df = DataFrame({'Dates': dates_first,'Second date': dates_second, 'Speaker':speaker_first, 'Position': position_first ,'Secondary speaker': speaker_second, 'Seconday position': position_second, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive})
-
-
-## For minutes
-# For minutes df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive, 'Speaker': speaker, 'Position': position})
-
-df = df.sort_values(by="Dates")
-
-print(df) 
-
-df.to_excel('test.xlsx', sheet_name='sheet1', index=False)
-
-print("Done")
+# df = DataFrame({'Dates': dates_first,'Second date': dates_second, 'Speaker':speaker_first, 'Position': position_first ,'Secondary speaker': speaker_second, 'Seconday position': position_second, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive})
+# 
+# 
+# ## For minutes
+# # For minutes df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive, 'Speaker': speaker, 'Position': position})
+# 
+# df = df.sort_values(by="Dates")
+# 
+# print(df) 
+# 
+# df.to_excel('test.xlsx', sheet_name='sheet1', index=False)
+# 
+# print("Done")
