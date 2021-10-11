@@ -32,6 +32,12 @@ from date_converter import date_converter_SMP, date_converter_minutes
 
 ## Token checker
 from token_checker import token_checker
+
+## VADER
+from VADER import senti_score # https://github.com/cjhutto/vaderSentiment
+
+## Minutes section remover
+from section_remover import section_remover
 #-------------------------------------Setup--------------------------------------------------#
 
 ## Load in NLP
@@ -80,9 +86,11 @@ percentage_negative = []
 
 percentage_positive = []
 
+VADER = []
+
 #-------------------------------------Opening JSON file--------------------------------------------------#
 
-with open('speeches_data.json', encoding='utf-8') as json_file:
+with open('minutes_data.json', encoding='utf-8') as json_file:
     data = json.load(json_file)
 #
 ##-------------------------------------Looping over each date in JSON, and flattening to a list. Deleting useless elements--------------------------------------------------#
@@ -90,27 +98,28 @@ number1 = 0
 
 for p in data:
 
-    #dates_first.append(p['Date'])    # For minutes, SMP
-    dates_first.append(p['Date'][0])
-    try:
-        dates_second.append(p['Date'][1])
-    except:
-        dates_second.append('')
-    
-    speaker_first.append(p['Speaker'][0])
-    try:
-        speaker_second.append(p['Speaker'][1])
-    except:
-        speaker_second.append('')
-    position_first.append(p['Position'][0])
-    try:
-        position_second.append(p['Position'][1])
-    except:
-        position_second.append('')
+    dates_first.append(p['Date'])    # For minutes, SMP
+    #dates_first.append(p['Date'][0])
+    #try:
+    #    dates_second.append(p['Date'][1])
+    #except:
+    #    dates_second.append('')
+    #
+    #speaker_first.append(p['Speaker'][0])
+    #try:
+    #    speaker_second.append(p['Speaker'][1])
+    #except:
+    #    speaker_second.append('')
+    #position_first.append(p['Position'][0])
+    #try:
+    #    position_second.append(p['Position'][1])
+    #except:
+    #    position_second.append('')
     del p['Date']
-    del p['Speaker']
-    del p['Position']
-    del p['URL']
+    #del p['Speaker']
+    #del p['Position']
+    #del p['URL']
+    section_remover(p) # Use in minutes
 
     data_flattened=flatten(p)
     data_list = data_flattened.values()
@@ -118,49 +127,50 @@ for p in data:
 ##-------------------------------------Turning the text in each date into a string, and cleaning it--------------------------------------------------#
     string = ""
     for paragraph in data_list:
-        paragraph = footnote_stripper(paragraph)      # For speeches
+        #paragraph = footnote_stripper(paragraph)      # For speeches
         string = string + " " + paragraph
+    VADER.append(senti_score(string))
 
-    string = strip_tags(string)
-    string = remove_punctuation_special_chars(string)
-    string = remove_stopwords(string)
-    string = lowercase(string)
-    string = lemmatize_text(string)
-    string = negation_words(string)
+    #string = strip_tags(string)
+    #string = remove_punctuation_special_chars(string)
+    #string = remove_stopwords(string)
+    #string = lowercase(string)
+    #string = lemmatize_text(string)
+    #string = negation_words(string)
 ##-------------------------------------Identifying negative and positive words for each date--------------------------------------------------#
 
-    doc = nlp(string)
-
-    negative_matches = matcher_negative(doc)
-    #print("Negative matches found:", len(negative_matches))
-    number_negative.append(len(negative_matches))
-    
-    negative_matches_with_unemploy = matcher_negative_with_unemploy(doc)
-    #print("Negative matches found:", len(negative_matches))
-    number_negative_with_unemploy.append(len(negative_matches_with_unemploy))
-
-    positive_matches = matcher_positive(doc)
-    #print("Positive matches found:", len(positive_matches))
-    number_positive.append(len(positive_matches))
-
-    #print("Net negativity score:", len(negative_matches) - len(positive_matches))
-    number_difference.append(len(negative_matches) - len(positive_matches))
-
-    number_difference_with_unemploy.append(len(negative_matches_with_unemploy) - len(positive_matches))
- 
-    #print("Total number of tokens:", len(doc))
-    number = -1
-    for token in doc:
-        number += 1
-    number_total.append(number)
-
-    net_negativity_score.append((len(negative_matches) - len(positive_matches))/number)
-    
-    net_negativity_score_with_unemploy.append((len(negative_matches_with_unemploy) - len(positive_matches))/number)
-    
-    percentage_negative.append(len(negative_matches)/number)
-
-    percentage_positive.append(len(positive_matches)/number)
+    #doc = nlp(string)
+#
+    #negative_matches = matcher_negative(doc)
+    ##print("Negative matches found:", len(negative_matches))
+    #number_negative.append(len(negative_matches))
+    #
+    #negative_matches_with_unemploy = matcher_negative_with_unemploy(doc)
+    ##print("Negative matches found:", len(negative_matches))
+    #number_negative_with_unemploy.append(len(negative_matches_with_unemploy))
+#
+    #positive_matches = matcher_positive(doc)
+    ##print("Positive matches found:", len(positive_matches))
+    #number_positive.append(len(positive_matches))
+#
+    ##print("Net negativity score:", len(negative_matches) - len(positive_matches))
+    #number_difference.append(len(negative_matches) - len(positive_matches))
+#
+    #number_difference_with_unemploy.append(len(negative_matches_with_unemploy) - len(positive_matches))
+ #
+    ##print("Total number of tokens:", len(doc))
+    #number = -1
+    #for token in doc:
+    #    number += 1
+    #number_total.append(number)
+#
+    #net_negativity_score.append((len(negative_matches) - len(positive_matches))/number)
+    #
+    #net_negativity_score_with_unemploy.append((len(negative_matches_with_unemploy) - len(positive_matches))/number)
+    #
+    #percentage_negative.append(len(negative_matches)/number)
+#
+    #percentage_positive.append(len(positive_matches)/number)
 
     number1 += 1
     print(number1)
@@ -168,7 +178,7 @@ for p in data:
 
 #-------------------------------------Cleaning up dates and converting them to datetime format for minutes--------------------------------------------------#
 
-#dates_2 = date_converter_minutes(dates_first)
+dates_2 = date_converter_minutes(dates_first)
 
 #-------------------------------------Cleaning up dates and converting them to datetime format for SMP--------------------------------------------------#
 
@@ -196,15 +206,16 @@ for p in data:
 #print(len(percentage_positive))
 
 ## For speeches
-df = DataFrame({'Dates': dates_first,'Second date': dates_second, 'Speaker':speaker_first, 'Position': position_first ,'Secondary speaker': speaker_second, 'Seconday position': position_second, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive})
+#df = DataFrame({'Date': dates_first,'Second date': dates_second, 'Speaker':speaker_first, 'Position': position_first ,'Secondary speaker': speaker_second, 'Seconday position': position_second, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'netneg': net_negativity_score, 'netnegur': net_negativity_score_with_unemploy,'negpercent': percentage_negative, 'pospercent': percentage_positive, 'VADER': VADER})
 
 ## For minutes
-#df = DataFrame({'Dates': dates_2, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'Net negativity score': net_negativity_score, 'Net negativity score with unemploy': net_negativity_score_with_unemploy,'Percentage negative': percentage_negative, 'Percentage positive': percentage_positive})
+#df = DataFrame({'Date': dates_2, 'Number of negative words': number_negative, 'Number of negative words including unemploy':number_negative_with_unemploy, 'Number of positive words': number_positive, 'Net negativity count': number_difference, 'Total token count': number_total, 'netneg': net_negativity_score, 'netnegur': net_negativity_score_with_unemploy,'negpercent': percentage_negative, 'pospercent': percentage_positive, 'VADER': VADER})
 
-df = df.sort_values(by="Dates")
+df = DataFrame({'Date': dates_2, 'VADER': VADER}) # VADER ONLY
+df = df.sort_values(by="Date")
 
 print(df) 
-
+#
 df.to_excel('test.xlsx', sheet_name='sheet1', index=False)
-
-print("Done")
+#
+#print("Done")

@@ -7,7 +7,7 @@ nlp = spacy.load('en_core_web_sm')
 
 ## Test text
 
-text = "Conditions in the labour market are also firm. Employment increased strongly in September, following some softer figures in the previous three months, with the unemployment rate remaining around 5\u00bd per cent."
+text = "The rebound in energy prices had been supported by cold weather in the northern hemisphere and the strong recovery in industrial production; base metals prices had also benefited from the rebound in global industrial activity. Other input costs, such as those for shipping, had also risen sharply in preceding months."
 
 #-------------------------------------Test code for test text--------------------------------------------------#
 

@@ -14,7 +14,7 @@ dates_minutes = []
 
 def date_converter_minutes(date_list):
     for date in date_list:
-        location_date = date.replace(u'\xa0', ' ')
+        location_date = date[0].replace(u'\xa0', ' ')
         sep = '– ' 
         sep1 = "- "
         date_only = location_date.split(sep, 1)[-1]

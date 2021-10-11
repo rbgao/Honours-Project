@@ -52,7 +52,8 @@ for sublist in negativelist:
 
 ## This is removing unemployment given its ambigious context - robustness check for when it is included
 negative_list_with_unemploy = removedup(negative_list)
-
+print(len(negative_list_with_unemploy))
+print(len(positive_list))
 negative_list.remove('unemployed')
 negative_list.remove('unemployment')
 negative_list = removedup(negative_list)

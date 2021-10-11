@@ -59,3 +59,4 @@ def section_remover(p):
         del p['Text']['Governor - Final Meeting'] ## Maybe not? 
     except: 
         pass
+    return p
